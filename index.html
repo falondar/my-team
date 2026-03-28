@@ -3,942 +3,469 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Скрипт переписки — Shanyraq</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Unbounded:wght@400;700&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Shanyraq — Скрипт переписки</title>
 <style>
-  :root {
-    --bg: #ffffff;
-    --surface: #f8f9fa;
-    --surface2: #e9ecef;
-    --border: #dee2e6;
-    --accent: #007bff;
-    --accent2: #6f42c1;
-    --gold: #ffc107;
-    --green: #28a745;
-    --red: #dc3545;
-    --purple: #6f42c1;
-    --text: #212529;
-    --muted: #6c757d;
-    --dimmed: #495057;
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;min-height:100vh;color:#1a1a1a}
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+.sidebar{background:#fff;border-right:1px solid #e8e5df;padding:24px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar-logo{padding:0 20px 20px;border-bottom:1px solid #e8e5df;margin-bottom:12px}
+.sidebar-logo .brand{font-size:16px;font-weight:700;color:#3d2fa0;letter-spacing:-.3px}
+.sidebar-logo .sub{font-size:11px;color:#9b97a0;margin-top:2px}
+.nav-label{font-size:10px;color:#b0adb8;text-transform:uppercase;letter-spacing:1px;padding:12px 20px 6px}
+.nav-item{padding:9px 20px;font-size:13px;color:#6b6878;cursor:pointer;display:flex;align-items:center;gap:10px;border-left:2px solid transparent;transition:all .15s}
+.nav-item:hover{background:#f7f6f2;color:#3d2fa0}
+.nav-item.active{background:#f0eeff;color:#3d2fa0;border-left-color:#3d2fa0;font-weight:500}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:#d0cdd8;flex-shrink:0}
+.nav-item.active .nav-dot{background:#3d2fa0}
 
-  body {
-    font-family: 'Manrope', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    line-height: 1.6;
-  }
+.main{display:flex;flex-direction:column;max-width:700px;padding:28px 32px}
+.page-title{font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.page-sub{font-size:13px;color:#9b97a0;margin-bottom:20px}
 
-  .header {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 28px 40px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    backdrop-filter: blur(12px);
-  }
+.chat-box{background:#fff;border-radius:16px;border:1px solid #e8e5df;overflow:hidden;margin-bottom:14px}
+.chat-messages{padding:20px;display:flex;flex-direction:column;gap:10px;min-height:160px}
+.msg{display:flex;flex-direction:column}
+.msg.out{align-items:flex-end}
+.msg.in{align-items:flex-start}
+.msg.sys{align-items:center}
+.who{font-size:10px;color:#b0adb8;margin-bottom:3px;padding:0 2px}
+.bubble{padding:10px 14px;border-radius:14px;font-size:13.5px;line-height:1.7;max-width:80%}
+.msg.out .bubble{background:#3d2fa0;color:#fff;border-radius:14px 14px 3px 14px}
+.msg.in .bubble{background:#f5f4f0;color:#1a1a1a;border-radius:14px 14px 14px 3px;border:1px solid #e8e5df}
+.msg.sys .bubble{background:#fdfcf7;border:1px solid #e8e5df;color:#9b97a0;font-size:12px;border-radius:8px;padding:6px 14px;max-width:100%;text-align:center;font-style:italic}
 
-  .logo {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 20px;
-    font-weight: 700;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -0.5px;
-  }
+.manager-end{background:linear-gradient(135deg,#f0eeff,#fdfcf7);border:1px solid #d4ccf5;border-radius:12px;padding:16px 18px;text-align:center;margin:4px 0}
+.manager-end .icon{font-size:22px;margin-bottom:6px}
+.manager-end .title{font-size:14px;font-weight:600;color:#3d2fa0;margin-bottom:4px}
+.manager-end .desc{font-size:12px;color:#7b74b0;line-height:1.5}
 
-  .header-tag {
-    background: rgba(0,123,255,0.15);
-    border: 1px solid rgba(0,123,255,0.3);
-    color: var(--accent);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+.voice-msg{display:flex;align-items:center;gap:10px;background:#f0eeff;border:1px solid #d4ccf5;border-radius:14px 14px 3px 14px;padding:10px 14px;cursor:pointer;max-width:80%;transition:background .15s;margin-left:auto}
+.voice-msg:hover{background:#e6e0ff}
+.voice-icon{width:30px;height:30px;border-radius:50%;background:#3d2fa0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.voice-icon svg{width:13px;height:13px;fill:#fff}
+.voice-wave{display:flex;align-items:center;gap:2px;flex:1}
+.wave-bar{width:3px;border-radius:3px;background:#3d2fa0;opacity:.5}
+.voice-label{font-size:11px;color:#3d2fa0;font-weight:500;white-space:nowrap}
+.voice-text-reveal{display:none;background:#f0eeff;border:1px solid #d4ccf5;border-radius:8px;padding:10px 14px;font-size:13px;color:#3d2fa0;margin-top:6px;line-height:1.65;max-width:80%;margin-left:auto}
 
-  .header-sub {
-    margin-left: auto;
-    color: var(--muted);
-    font-size: 13px;
-  }
+.choices-wrap{padding:14px 18px;border-top:1px solid #e8e5df;background:#fdfcf7}
+.choices-label{font-size:10px;color:#b0adb8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+.choices{display:flex;flex-direction:column;gap:6px}
+.choice-btn{text-align:left;background:#fff;border:1px solid #e0ddf5;border-radius:10px;padding:9px 14px;font-size:13px;color:#3d2fa0;cursor:pointer;transition:all .15s;line-height:1.5}
+.choice-btn:hover{background:#f0eeff;border-color:#b8aff0}
+.back-btn{background:none;border:none;font-size:12px;color:#b0adb8;cursor:pointer;padding:10px 20px;text-decoration:underline;text-underline-offset:3px;display:block}
+.back-btn:hover{color:#3d2fa0}
 
-  /* LAYOUT */
-  .layout {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    min-height: calc(100vh - 80px);
-  }
-
-  /* SIDEBAR */
-  .sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 24px 0;
-    position: sticky;
-    top: 80px;
-    height: calc(100vh - 80px);
-    overflow-y: auto;
-  }
-
-  .sidebar-title {
-    font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    padding: 0 20px 12px;
-  }
-
-  .nav-item {
-    padding: 10px 20px;
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--dimmed);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.15s;
-    border-left: 2px solid transparent;
-  }
-
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active {
-    background: rgba(0,123,255,0.08);
-    color: var(--accent);
-    border-left-color: var(--accent);
-  }
-
-  .nav-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--muted);
-    flex-shrink: 0;
-  }
-  .nav-item.active .nav-dot { background: var(--accent); }
-
-  .nav-section {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
-
-  /* MAIN */
-  .main {
-    padding: 40px;
-    max-width: 900px;
-  }
-
-  /* SECTION */
-  .section {
-    margin-bottom: 48px;
-    scroll-margin-top: 100px;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-
-  .section-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .section-title {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .section-sub {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  /* STEP BLOCK */
-  .step-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 16px;
-  }
-
-  .step-label {
-    font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 10px 16px 0;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .step-label::before {
-    content: '';
-    display: inline-block;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-  }
-
-  .step-label.send::before { background: var(--accent); }
-  .step-label.receive::before { background: var(--purple); }
-  .step-label.note::before { background: var(--gold); }
-  .step-label.action::before { background: var(--green); }
-
-  .step-content {
-    padding: 12px 16px 16px;
-  }
-
-  /* BUBBLE */
-  .bubble {
-    border-radius: 12px;
-    padding: 12px 16px;
-    font-size: 14px;
-    line-height: 1.65;
-    position: relative;
-    max-width: 520px;
-  }
-
-  .bubble.out {
-    background: linear-gradient(135deg, rgba(0,123,255,0.18), rgba(0,123,255,0.08));
-    border: 1px solid rgba(0,123,255,0.25);
-    margin-left: auto;
-    margin-right: 0;
-    color: var(--text);
-  }
-
-  .bubble.in {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--dimmed);
-    font-style: italic;
-  }
-
-  .bubble.system {
-    background: rgba(255,193,7,0.07);
-    border: 1px solid rgba(255,193,7,0.2);
-    color: var(--text);
-    font-size: 13px;
-    max-width: 100%;
-  }
-
-  .bubble em {
-    color: var(--muted);
-    font-size: 12px;
-    font-style: italic;
-  }
-
-  .bubble strong {
-    color: var(--gold);
-    font-weight: 600;
-  }
-
-  /* VARIANTS */
-  .variants-label {
-    font-size: 11px;
-    color: var(--muted);
-    font-family: 'IBM Plex Mono', monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin: 14px 0 8px;
-  }
-
-  .variant-tag {
-    display: inline-block;
-    background: rgba(201, 124, 245, 0.1);
-    border: 1px solid rgba(201, 124, 245, 0.25);
-    color: var(--purple);
-    border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 11px;
-    margin: 3px 3px 3px 0;
-    font-family: 'IBM Plex Mono', monospace;
-  }
-
-  /* OBJECTION CARD */
-  .obj-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
-  .obj-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
-  }
-
-  .obj-question {
-    font-size: 13px;
-    color: var(--red);
-    font-weight: 600;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .obj-answer {
-    font-size: 13px;
-    color: var(--text);
-    line-height: 1.65;
-    background: rgba(0,123,255,0.08);
-    border: 1px solid rgba(0,123,255,0.15);
-    border-radius: 10px;
-    padding: 10px 12px;
-  }
-
-  .obj-answer + .obj-answer {
-    margin-top: 8px;
-  }
-
-  /* TARIFF CARD */
-  .tariff-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-    margin-top: 8px;
-  }
-
-  .tariff-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    text-align: center;
-  }
-
-  .tariff-card.highlight {
-    background: rgba(0,123,255,0.1);
-    border-color: rgba(0,123,255,0.4);
-  }
-
-  .tariff-name {
-    font-family: 'Unbounded', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .tariff-desc {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 6px;
-    line-height: 1.5;
-  }
-
-  .tip-box {
-    background: rgba(40, 167, 69, 0.06);
-    border: 1px solid rgba(40, 167, 69, 0.2);
-    border-radius: 12px;
-    padding: 14px 16px;
-    font-size: 13px;
-    color: var(--green);
-    margin-top: 12px;
-    display: flex;
-    gap: 10px;
-  }
-
-  .tip-icon { flex-shrink: 0; }
-
-  /* DIVIDER */
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 32px 0;
-  }
-
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .copy-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(0,123,255,0.1);
-    border: 1px solid rgba(0,123,255,0.2);
-    color: var(--accent);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 11px;
-    cursor: pointer;
-    font-family: 'IBM Plex Mono', monospace;
-    margin-top: 8px;
-    transition: all 0.15s;
-    float: right;
-  }
-  .copy-btn:hover { background: rgba(0,123,255,0.2); }
-
-  /* STATUS BADGE */
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .badge.green { background: rgba(46,204,143,0.15); color: var(--green); }
-  .badge.gold { background: rgba(255,193,7,0.15); color: var(--gold); }
-  .badge.blue { background: rgba(0,123,255,0.15); color: var(--accent); }
-
-  @media (max-width: 768px) {
-    .layout { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
-    .main { padding: 20px; }
-    .obj-grid, .tariff-grid { grid-template-columns: 1fr; }
-    .header { padding: 16px 20px; }
-  }
+@media(max-width:700px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main{padding:16px}
+}
 </style>
 </head>
 <body>
+<div class="app">
 
-<div class="header">
-  <div class="logo">SHANYRAQ 🇰🇿</div>
-  <div class="header-tag">Скрипт переписки</div>
-  <div class="header-sub">Курсы казахского языка</div>
-</div>
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">SHANYRAQ 🇰🇿</div>
+    <div class="sub">Скрипт переписки · Тариф Бизнес</div>
+  </div>
+  <div class="nav-label">Основной поток</div>
+  <div class="nav-item active" onclick="goStage('open',this)"><div class="nav-dot"></div>👋 Первое касание</div>
+  <div class="nav-item" onclick="goStage('qualify',this)"><div class="nav-dot"></div>🎯 Квалификация</div>
+  <div class="nav-item" onclick="goStage('pain',this)"><div class="nav-dot"></div>🔍 Боль / мотивация</div>
+  <div class="nav-item" onclick="goStage('present',this)"><div class="nav-dot"></div>🎓 Презентация курса</div>
+  <div class="nav-item" onclick="goStage('offer',this)"><div class="nav-dot"></div>💳 Тариф Бизнес</div>
+  <div class="nav-item" onclick="goStage('close',this)"><div class="nav-dot"></div>✅ Закрытие</div>
+  <div class="nav-label">Возражения</div>
+  <div class="nav-item" onclick="goStage('obj_price',this)"><div class="nav-dot"></div>💸 Дорого</div>
+  <div class="nav-item" onclick="goStage('obj_time',this)"><div class="nav-dot"></div>⏰ Нет времени</div>
+  <div class="nav-item" onclick="goStage('obj_think',this)"><div class="nav-dot"></div>🤔 Подумаю</div>
+  <div class="nav-item" onclick="goStage('obj_tried',this)"><div class="nav-dot"></div>😔 Пробовал — не вышло</div>
+  <div class="nav-label">Дожим</div>
+  <div class="nav-item" onclick="goStage('followup',this)"><div class="nav-dot"></div>⏳ Не отвечает</div>
+</nav>
 
-<div class="layout">
-  <!-- SIDEBAR -->
-  <nav class="sidebar">
-    <div class="sidebar-title">Этапы скрипта</div>
+<main class="main">
+  <div class="page-title" id="pageTitle">Первое касание</div>
+  <div class="page-sub" id="pageSub">Клиент оставил заявку — пишем первыми</div>
+  <div class="chat-box">
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="choices-wrap" id="choicesWrap"></div>
+  </div>
+  <button class="back-btn" id="backBtn" onclick="goBack()" style="display:none">← Назад</button>
+</main>
 
-    <div class="nav-item active" onclick="scrollTo('s1')">
-      <div class="nav-dot"></div> 1. Первое касание
-    </div>
-    <div class="nav-item" onclick="scrollTo('s2')">
-      <div class="nav-dot"></div> 2. Квалификация
-    </div>
-    <div class="nav-item" onclick="scrollTo('s3')">
-      <div class="nav-dot"></div> 3. Выявление боли
-    </div>
-    <div class="nav-item" onclick="scrollTo('s4')">
-      <div class="nav-dot"></div> 4. Презентация
-    </div>
-    <div class="nav-item" onclick="scrollTo('s5')">
-      <div class="nav-dot"></div> 5. Оффер и тарифы
-    </div>
-    <div class="nav-item" onclick="scrollTo('s6')">
-      <div class="nav-dot"></div> 6. Закрытие / оплата
-    </div>
-
-    <div class="nav-section">
-      <div class="sidebar-title">Работа с клиентом</div>
-      <div class="nav-item" onclick="scrollTo('s7')">
-        <div class="nav-dot"></div> Возражения
-      </div>
-      <div class="nav-item" onclick="scrollTo('s8')">
-        <div class="nav-dot"></div> Нет ответа / отложил
-      </div>
-      <div class="nav-item" onclick="scrollTo('s9')">
-        <div class="nav-dot"></div> Советы по тону
-      </div>
-    </div>
-  </nav>
-
-  <!-- MAIN CONTENT -->
-  <main class="main">
-
-    <!-- SECTION 1 -->
-    <div class="section" id="s1">
-      <div class="section-header">
-        <div class="section-icon" style="background:rgba(59,91,252,0.15);">👋</div>
-        <div>
-          <div class="section-title">1. Первое касание</div>
-          <div class="section-sub">Клиент оставил заявку — пишем первыми, быстро и тепло</div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Отправляем</div>
-        <div class="step-content">
-          <div class="bubble out">
-            Тимур, здравствуйте! 👋<br>
-            Это Ибрахим из Shanyraq — курсы казахского языка 🇰🇿<br><br>
-            Вы оставили заявку, чтобы я подобрал для вас подходящий формат — удобнее будет созвониться на 5–7 минут 🙌🏻<br><br>
-            Подскажите, когда вам будет удобно поговорить?
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label receive">Клиент отвечает</div>
-        <div class="step-content">
-          <div class="bubble in">— Удобнее по переписке</div>
-          <div style="margin-top:12px"></div>
-          <div class="bubble in">— Сейчас не могу говорить, напишите</div>
-          <div style="margin-top:12px"></div>
-          <div class="bubble in">— Лучше в WhatsApp / Telegram</div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Переходим в переписку</div>
-        <div class="step-content">
-          <div class="bubble out">
-            Отлично, тогда здесь! 😊<br>
-            Подскажите, [Имя] — обучение рассматриваете для себя?
-          </div>
-        </div>
-      </div>
-
-      <div class="tip-box">
-        <div class="tip-icon">💡</div>
-        <div><strong style="color:#2ecc8f">Важно:</strong> Первый ответ отправляем в течение 5–15 минут после заявки. Чем быстрее — тем выше конверсия. Тон — живой, не как шаблон колл-центра.</div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- SECTION 2 -->
-    <div class="section" id="s2">
-      <div class="section-header">
-        <div class="section-icon" style="background:rgba(162,89,255,0.12);">🎯</div>
-        <div>
-          <div class="section-title">2. Квалификация</div>
-          <div class="section-sub">Узнаём — кто перед нами и на каком уровне</div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Вопрос 1 — Для кого</div>
-        <div class="step-content">
-          <div class="bubble out">
-            [Имя], обучение для себя рассматриваете?
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Вопрос 2 — Уровень языка</div>
-        <div class="step-content">
-          <div class="bubble out">
-            Отлично 👍<br>
-            Несколько уточняющих вопросов задам:<br>
-            Как у Вас сейчас дела с казахским? Говорите/понимаете или начальный уровень?
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label note">Типичные ответы клиентов</div>
-        <div class="step-content">
-          <div style="display:flex; flex-wrap:wrap; gap:8px;">
-            <span class="badge blue">С нуля</span>
-            <span class="badge blue">Понимаю, но не говорю</span>
-            <span class="badge blue">Базовые слова знаю</span>
-            <span class="badge gold">Читаю, но не говорю</span>
-            <span class="badge gold">Средний уровень</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- SECTION 3 -->
-    <div class="section" id="s3">
-      <div class="section-header">
-        <div class="section-icon" style="background:rgba(245,200,66,0.1);">🔍</div>
-        <div>
-          <div class="section-title">3. Выявление боли и мотивации</div>
-          <div class="section-sub">Почему сейчас? Что мешало раньше?</div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Вопрос о цели</div>
-        <div class="step-content">
-          <div class="bubble out">
-            Понял вас.<br>
-            А в каких ситуациях сейчас по большей части не хватает казахского? Где в основном с ним сталкиваетесь?
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label note">Болевые точки → что отвечать</div>
-        <div class="step-content">
-          <div class="obj-grid">
-            <div class="obj-card">
-              <div class="obj-question">💼 Работа / карьера</div>
-              <div class="obj-answer">
-                Понял, работа — это сильная мотивация. В рабочей среде казахский очень помогает — и в общении с коллегами, и для карьерного роста. Мы как раз делаем упор на разговорный язык с деловым уклоном.
-              </div>
-            </div>
-            <div class="obj-card">
-              <div class="obj-question">👨‍👩‍👧 Семья / родственники</div>
-              <div class="obj-answer">
-                Это очень частая и тёплая причина 😊 Когда начинаешь говорить с семьёй на казахском — отношения совсем по-другому чувствуются. У нас много учеников именно с такой мотивацией.
-              </div>
-            </div>
-            <div class="obj-card">
-              <div class="obj-question">🌍 Самореализация / культура</div>
-              <div class="obj-answer">
-                Уважаю такой подход! Казахский — живой и богатый язык. Понимать культуру изнутри — это совсем другой уровень.
-              </div>
-            </div>
-            <div class="obj-card">
-              <div class="obj-question">📋 Экзамен / переезд</div>
-              <div class="obj-answer">
-                Хорошо, это конкретная цель — с ней мы работаем системно. Подберём формат, который даст результат к нужному сроку.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- SECTION 4 -->
-    <div class="section" id="s4">
-      <div class="section-header">
-        <div class="section-icon" style="background:rgba(46,204,143,0.1);">🎓</div>
-        <div>
-          <div class="section-title">4. Презентация программы</div>
-          <div class="section-sub">Отвечаем на вопрос "что вы даёте" — коротко и убедительно</div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Презентация (основная)</div>
-        <div class="step-content">
-          <div class="bubble out">
-            Спасибо за подробную обратную связь 👍<br><br>
-            По программе есть 3 пакета на выбор. Исходя из вашей ситуации Вам идеально подойдёт формат <strong>Бизнес</strong> <em>(либо Премиум как сами считаете)</em>
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Что даёт Shanyraq (видео + текст)</div>
-        <div class="step-content">
-          <div class="bubble system">
-            📎 Отправляем видео-презентацию <strong>+ следом пишем:</strong>
-          </div>
-          <div class="bubble out" style="margin-top:10px">
-            <strong>С чем Shanyraq помогает:</strong><br>
-            🗣 Развить разговорный казахский с нуля или с текущего уровня<br>
-            💬 Начать уверенно говорить в бытовых ситуациях и на работе<br>
-            🧠 Убрать психологический барьер и страх говорить<br>
-            🔄 Перестать переводить в голове и начать говорить на казахском без паузы
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label action">После видео — уточняем</div>
-        <div class="step-content">
-          <div class="bubble out">
-            Как вам?
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- SECTION 5 -->
-    <div class="section" id="s5">
-      <div class="section-header">
-        <div class="section-icon" style="background:rgba(59,91,252,0.12);">💳</div>
-        <div>
-          <div class="section-title">5. Оффер и тарифы</div>
-          <div class="section-sub">Презентуем пакеты и направляем к нужному</div>
-        </div>
-      </div>
-
-      <div class="tariff-grid">
-        <div class="tariff-card">
-          <div class="tariff-name">Старт</div>
-          <div class="tariff-desc">Базовый формат для старта. Хорошо подходит, если бюджет ограничен или хочется попробовать.</div>
-        </div>
-        <div class="tariff-card highlight">
-          <div class="tariff-name">🏆 Бизнес</div>
-          <div class="tariff-desc">Оптимальный выбор. Рекомендуем большинству — результат без перегруза.</div>
-        </div>
-        <div class="tariff-card">
-          <div class="tariff-name">Премиум</div>
-          <div class="tariff-desc">Максимальный формат. Для тех, кто хочет результат быстрее всего.</div>
-        </div>
-      </div>
-
-      <div class="step-block" style="margin-top:20px">
-        <div class="step-label send">Отправляем тарифы</div>
-        <div class="step-content">
-          <div class="bubble out">
-            Вот ссылка на договор с тарифами: <strong>shanyraqstudy.kz/business-4months-20minutes</strong><br><br>
-            Там подробно расписано что входит в каждый пакет — посмотрите, если будут вопросы — напишите 🙌
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- SECTION 6 -->
-    <div class="section" id="s6">
-      <div class="section-header">
-        <div class="section-icon" style="background:rgba(46,204,143,0.12);">✅</div>
-        <div>
-          <div class="section-title">6. Закрытие и оплата</div>
-          <div class="section-sub">Ведём клиента к решению — мягко, без давления</div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">После просмотра тарифов</div>
-        <div class="step-content">
-          <div class="bubble out">
-            [Имя], посмотрели? Какой вариант вам ближе?
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Если выбрал тариф — к оплате</div>
-        <div class="step-content">
-          <div class="bubble out">
-            Отлично! 🎉<br>
-            Для оформления нужны ваши данные:<br>
-            — ФИО<br>
-            — Номер телефона<br>
-            — Email<br><br>
-            После этого пришлю реквизиты для оплаты 👌
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Пробный урок (если клиент сомневается)</div>
-        <div class="step-content">
-          <div class="bubble out">
-            [Имя], если хотите — можем записать вас на пробный урок, чтобы вы сначала познакомились с форматом. Без обязательств 🙌<br>
-            Как вам такой вариант?
-          </div>
-        </div>
-      </div>
-
-      <div class="tip-box">
-        <div class="tip-icon">💡</div>
-        <div>Если клиент говорит "подумаю" — не давим. Уточняем: "Что именно хотите обдумать? Может, есть вопрос, который я не раскрыл?" — часто это выводит на настоящее возражение.</div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- SECTION 7 -->
-    <div class="section" id="s7">
-      <div class="section-header">
-        <div class="section-icon" style="background:rgba(255,92,92,0.1);">🛡️</div>
-        <div>
-          <div class="section-title">7. Работа с возражениями</div>
-          <div class="section-sub">Готовые ответы на типичные "нет"</div>
-        </div>
-      </div>
-
-      <div class="obj-grid">
-
-        <div class="obj-card">
-          <div class="obj-question">❌ "Дорого"</div>
-          <div class="obj-answer">
-            [Имя], понимаю вас. Давайте посмотрим на это так — это не трата, а инвестиция в ваши возможности. Казахский открывает двери — на работе, в общении, в карьере.<br><br>
-            Кстати, у нас есть рассрочка — можем разбить платёж. Так будет удобнее?
-          </div>
-          <div class="obj-answer" style="margin-top:8px">
-            А если сравнить с репетитором, у нас выходит в несколько раз дешевле при том же результате. Плюс системная методика, а не разрозненные уроки.
-          </div>
-        </div>
-
-        <div class="obj-card">
-          <div class="obj-question">❌ "Нет времени"</div>
-          <div class="obj-answer">
-            Наш формат и создан для занятых людей — 20 минут в день, всё. Никаких многочасовых сессий.<br><br>
-            20 минут — это даже меньше, чем обеденный перерыв. Многие наши ученики занимаются по дороге на работу или вечером перед сном 🙌
-          </div>
-        </div>
-
-        <div class="obj-card">
-          <div class="obj-question">❌ "Пробовал раньше — не пошло"</div>
-          <div class="obj-answer">
-            Я вас понимаю, это частая история. Обычно не идёт из-за неправильного подхода — зубрёжка правил, нет практики говорения.<br><br>
-            У нас всё наоборот — с первого урока разговариваете, не учите грамматику. Именно поэтому у нас столько учеников, которые пробовали раньше и у них не получалось.
-          </div>
-        </div>
-
-        <div class="obj-card">
-          <div class="obj-question">❌ "Подумаю / не сейчас"</div>
-          <div class="obj-answer">
-            Конечно, не тороплю 🙌 Подскажите — что именно хотите обдумать? Может, есть вопрос, который я не раскрыл — с удовольствием отвечу.
-          </div>
-          <div class="obj-answer" style="margin-top:8px">
-            Хорошо, возьмите время. Напишите, когда будете готовы — я здесь 😊 Если хотите, могу прислать отзывы учеников — поможет с решением?
-          </div>
-        </div>
-
-        <div class="obj-card">
-          <div class="obj-question">❌ "Есть другие предложения"</div>
-          <div class="obj-answer">
-            Разумно сравнивать 👍 Скажите, что именно смотрите ещё — я смогу рассказать, чем мы отличаемся, и вы сами решите, что лучше для вас.
-          </div>
-        </div>
-
-        <div class="obj-card">
-          <div class="obj-question">❌ "А результат гарантирован?"</div>
-          <div class="obj-answer">
-            Результат зависит от вас на 50% — если заниматься регулярно, он будет. Мы со своей стороны даём структуру, методику и поддержку.<br><br>
-            У нас сотни учеников, которые начали с нуля и теперь говорят свободно — можем показать отзывы 📩
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- SECTION 8 -->
-    <div class="section" id="s8">
-      <div class="section-header">
-        <div class="section-icon" style="background:rgba(245,200,66,0.1);">⏳</div>
-        <div>
-          <div class="section-title">8. Нет ответа / отложил решение</div>
-          <div class="section-sub">Как напоминать — без навязчивости</div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Через 1 день — мягкий дожим</div>
-        <div class="step-content">
-          <div class="bubble out">
-            [Имя], добрый день! 👋<br>
-            Вы смотрели программу — как впечатление? Есть ли вопросы, которые не успел раскрыть?
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Через 3 дня — ценность + повод</div>
-        <div class="step-content">
-          <div class="bubble out">
-            [Имя], привет! 🙌<br>
-            Хотел напомнить — мы набираем группу, стартуем [дата]. Места ограничены.<br>
-            Если решитесь — лучше оформить сейчас, чтобы точно попасть на поток.
-          </div>
-        </div>
-      </div>
-
-      <div class="step-block">
-        <div class="step-label send">Через 7 дней — финальный</div>
-        <div class="step-content">
-          <div class="bubble out">
-            [Имя], не хочу мешать — просто последний раз уточню 😊<br>
-            Если сейчас не актуально — скажите, занесу вас в список на следующий поток. Напомню, когда начнём набор.
-          </div>
-        </div>
-      </div>
-
-      <div class="tip-box">
-        <div class="tip-icon">⚡</div>
-        <div>Правило трёх касаний: 1 день → 3 дня → 7 дней. После третьего — не пишем, пока сами не напишут. Уважаем пространство клиента.</div>
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- SECTION 9 -->
-    <div class="section" id="s9">
-      <div class="section-header">
-        <div class="section-icon" style="background:rgba(162,89,255,0.12);">✨</div>
-        <div>
-          <div class="section-title">9. Советы по тону переписки</div>
-          <div class="section-sub">Как писать, чтобы хотели отвечать</div>
-        </div>
-      </div>
-
-      <div class="obj-grid">
-        <div class="obj-card">
-          <div class="obj-question" style="color: var(--green);">✅ Делаем</div>
-          <div class="obj-answer">
-            Пишем живо — как другу, не как в банке<br><br>
-            Один вопрос за раз — не заваливаем<br><br>
-            Слушаем и отвечаем на боль — не по шаблону<br><br>
-            Используем имя клиента<br><br>
-            Эмодзи — умеренно, для живости 😊
-          </div>
-        </div>
-        <div class="obj-card">
-          <div class="obj-question">❌ Избегаем</div>
-          <div class="obj-answer">
-            Шаблонных фраз типа "Ваша заявка принята в обработку"<br><br>
-            Трёх вопросов подряд<br><br>
-            Давления и срочности без повода<br><br>
-            Длинных монологов без вопроса в конце<br><br>
-            Игнорирования того, что сказал клиент
-          </div>
-        </div>
-      </div>
-
-      <div class="tip-box" style="margin-top:16px">
-        <div class="tip-icon">🎯</div>
-        <div><strong style="color:#2ecc8f">Главный принцип:</strong> Каждое сообщение должно вести к следующему шагу. Заканчивай либо вопросом, либо чётким призывом к действию — никогда просто "информацией".</div>
-      </div>
-    </div>
-
-  </main>
 </div>
 
 <script>
-function scrollTo(id) {
-  document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  event.target.closest('.nav-item').classList.add('active');
+const flows = {
+
+  open:{
+    title:'Первое касание',
+    sub:'Клиент оставил заявку — пишем первыми',
+    msgs:[
+      {type:'out', text:'[Имя], здравствуйте! 🙌\nМеня зовут Ибрахим, я из Shanyraq — курсы казахского языка 🇰🇿\nВы оставили заявку — удобнее созвониться на 5 минут или пообщаться здесь?'},
+    ],
+    choices:[
+      {label:'Клиент: удобнее по переписке', next:'open_text'},
+      {label:'Клиент: сейчас не могу говорить', next:'open_text'},
+    ]
+  },
+
+  open_text:{
+    title:'Переходим в переписку',
+    sub:'Клиент выбрал чат',
+    msgs:[
+      {type:'sys', text:'Клиент выбрал переписку'},
+      {type:'out', text:'Хорошо, тогда здесь! 😊\nПару вопросов задам — займёт буквально пять минут.\nОбучение для себя рассматриваете?'},
+    ],
+    choices:[
+      {label:'Клиент: да, для себя', next:'qualify'},
+      {label:'Клиент: для ребёнка', next:'qualify_child'},
+    ]
+  },
+
+  qualify:{
+    title:'Квалификация',
+    sub:'Уточняем уровень языка',
+    msgs:[
+      {type:'out', text:'Отлично 👍\nА с казахским сейчас как — совсем с нуля или какая-то база уже есть?'},
+      {type:'voice', text:'[Имя], здравствуйте! Ибрахим из Shanyraq. Вы оставили заявку — хотел уточнить пару моментов. Скажите, казахский сейчас совсем с нуля или что-то уже есть?'},
+    ],
+    choices:[
+      {label:'Клиент: с нуля', next:'pain'},
+      {label:'Клиент: понимаю, но не говорю', next:'pain'},
+      {label:'Клиент: базовые слова знаю', next:'pain'},
+    ]
+  },
+
+  qualify_child:{
+    title:'Квалификация — ребёнок',
+    sub:'Уточняем возраст и уровень',
+    msgs:[
+      {type:'out', text:'Понял! А сколько лет ребёнку?\nИ он сейчас по-казахски что-то понимает?'},
+    ],
+    choices:[
+      {label:'Клиент: 7–12 лет, с нуля', next:'pain'},
+      {label:'Клиент: подросток', next:'pain'},
+    ]
+  },
+
+  pain:{
+    title:'Боль и мотивация',
+    sub:'Выясняем зачем человеку казахский',
+    msgs:[
+      {type:'out', text:'Понял вас 👌\nА в каких ситуациях сейчас больше всего не хватает казахского? На работе, в семье — или что-то другое?'},
+      {type:'voice', text:'Скажите — а зачем именно сейчас решили начать? Что-то конкретное подтолкнуло или давно хотели?'},
+    ],
+    choices:[
+      {label:'Клиент: работа / коллеги', next:'pain_work'},
+      {label:'Клиент: семья / родственники', next:'pain_family'},
+      {label:'Клиент: просто хочу говорить свободно', next:'pain_self'},
+      {label:'Клиент: экзамен / госслужба', next:'pain_exam'},
+      {label:'Клиент: бизнес, хочет только с преподом', next:'pain_biz'},
+    ]
+  },
+
+  pain_work:{
+    title:'Мотивация — работа',
+    sub:'Клиент хочет казахский для работы',
+    msgs:[
+      {type:'in', text:'На работе нужен — коллеги говорят, неловко'},
+      {type:'out', text:'Да, это очень частая история — и очень хорошая мотивация 👍\nКогда язык нужен каждый день на работе, прогресс ощущается быстро.\nМогу рассказать что мы делаем?'},
+    ],
+    choices:[
+      {label:'Клиент: да, расскажите', next:'present'},
+    ]
+  },
+
+  pain_family:{
+    title:'Мотивация — семья',
+    sub:'Клиент хочет общаться с родственниками',
+    msgs:[
+      {type:'in', text:'С родственниками хочу общаться — стыдно что не говорю'},
+      {type:'out', text:'Это, наверное, самая тёплая причина из всех 🙏\nКогда начинаешь говорить с близкими на казахском — отношения совсем по-другому ощущаются.\nРасскажу как у нас всё устроено?'},
+    ],
+    choices:[
+      {label:'Клиент: да, давайте', next:'present'},
+    ]
+  },
+
+  pain_self:{
+    title:'Мотивация — самореализация',
+    sub:'Клиент хочет говорить свободно',
+    msgs:[
+      {type:'in', text:'Просто хочу свободно говорить — это мой язык, моя культура'},
+      {type:'out', text:'Уважаю такой подход 🙏\nЭто сильно — когда человек чувствует что язык его, и хочет его вернуть.\nПокажу как мы с этим работаем?'},
+    ],
+    choices:[
+      {label:'Клиент: покажите', next:'present'},
+    ]
+  },
+
+  pain_exam:{
+    title:'Мотивация — экзамен / госслужба',
+    sub:'Передаём менеджеру — индивидуальный случай',
+    msgs:[
+      {type:'in', text:'Мне нужно сдать экзамен / хочу в госкомпанию'},
+      {type:'out', text:'Понял, это конкретная цель — и мы с такими работаем 💪\nСкажите, сроки уже есть? Это важно, чтобы правильно подобрать темп.\nДайте минуту — подключу к вам куратора, который специализируется именно на этом направлении.'},
+      {type:'handoff', text:''},
+    ],
+    choices:[]
+  },
+
+  pain_biz:{
+    title:'Бизнесмен — индивидуальный формат',
+    sub:'Клиент хочет только с преподавателем, без платформы',
+    msgs:[
+      {type:'in', text:'Мне платформы не нужны — хочу просто с преподавателем работать'},
+      {type:'out', text:'Понял вас — это индивидуальный формат, здесь лучше подберём под ваш запрос точечно.\nСкажите, в каком темпе хотите заниматься и когда удобно? Я передам вашу информацию куратору, он свяжется и согласует всё напрямую.'},
+      {type:'handoff', text:''},
+    ],
+    choices:[]
+  },
+
+  present:{
+    title:'Презентация курса',
+    sub:'Рассказываем о программе + отправляем материалы',
+    msgs:[
+      {type:'sys', text:'📎 Отправляем презентацию / видео'},
+      {type:'out', text:'📎 [презентация]\n\nShanyraq — это разговорный казахский без зубрёжки правил.\nС первого урока Вы говорите, а не учите грамматику.\n\nМетодика 20/80 — 20% теории, 80% живой практики.\nВсего 20–30 минут в день — без отрыва от дел.\n\nБольше 5 000 учеников уже говорят свободно.\n\nКак Вам?'},
+      {type:'voice', text:'Вот презентация — посмотрите. Если коротко: мы не учим язык через правила, мы учим говорить. Разница огромная. Большинство у кого не шло раньше — именно из-за подхода.'},
+    ],
+    choices:[
+      {label:'Клиент: интересно, расскажите подробнее / по цене', next:'offer'},
+      {label:'Клиент: а как занятия проходят?', next:'present_how'},
+      {label:'Клиент: нравится, хочу записаться', next:'offer'},
+    ]
+  },
+
+  present_how:{
+    title:'Формат занятий',
+    sub:'Клиент спросил как всё устроено',
+    msgs:[
+      {type:'in', text:'А как именно занятия проходят?'},
+      {type:'out', text:'Всё онлайн — без привязки к городу.\n\nУ каждого ученика есть личный куратор, который ведёт Вас с первого до последнего дня.\n\n4 живых урока в неделю по 20 минут — коротко, но регулярно.\nПлюс 4 видео-урока под Ваш уровень, разговорный клуб раз в неделю, словари под бытовые и рабочие ситуации.\n\nГибкий график — сами выбираете время. Можно заморозить до 3 недель.\n\nПоказать тариф?'},
+    ],
+    choices:[
+      {label:'Клиент: да, покажите', next:'offer'},
+    ]
+  },
+
+  offer:{
+    title:'Тариф Бизнес',
+    sub:'Представляем единственный рекомендуемый пакет',
+    msgs:[
+      {type:'out', text:'По программе у нас один тариф — Бизнес. Он закрывает всё что нужно для реального результата 👇\n\n📌 Длительность: 4 месяца\n📌 4 живых урока в неделю по 20 минут (1 на 1 с куратором)\n📌 4 видео-урока в неделю под Ваш уровень\n📌 Разговорный клуб — 1 раз в неделю\n📌 Личный куратор на весь курс\n📌 Словари под бытовые и рабочие ситуации\n📌 Уроки по ораторству и психологии общения\n📌 Доступ к видео на 12 месяцев\n📌 Гибкий график + заморозка до 3 недель\n\n💳 Стоимость: 189 000 ₸\nИли 15 750 ₸ / месяц — рассрочка 0–12 мес. без %\nДоступна в Kaspi, Halyk, Home Credit\n\nВот ссылка на договор:\nshanyraqstudy.kz/business-4months-20minutes'},
+    ],
+    choices:[
+      {label:'Клиент: готов оформить', next:'close'},
+      {label:'Клиент: дорого', next:'obj_price'},
+      {label:'Клиент: подумаю', next:'obj_think'},
+      {label:'Клиент: нет времени', next:'obj_time'},
+      {label:'Клиент: пробовал — не вышло', next:'obj_tried'},
+    ]
+  },
+
+  close:{
+    title:'Закрытие',
+    sub:'Оформляем и берём данные',
+    msgs:[
+      {type:'out', text:'Отлично! 🎉\nДавайте оформим — напишите, пожалуйста:\n— ФИО\n— Номер телефона\n— Email\n\nПришлю реквизиты и договор 📄'},
+      {type:'voice', text:'Записал Вас! Напишите ФИО, номер и почту — я сразу пришлю договор. Добро пожаловать в Shanyraq!'},
+    ],
+    choices:[
+      {label:'Клиент сомневается — предложить пробный урок', next:'close_trial'},
+    ]
+  },
+
+  close_trial:{
+    title:'Пробный урок',
+    sub:'Клиент не на 100% — снимаем барьер входа',
+    msgs:[
+      {type:'out', text:'Если ещё есть сомнения — давайте запишу Вас на пробный урок.\nБез обязательств — просто почувствуете формат изнутри.\nКак Вам такой вариант?'},
+    ],
+    choices:[
+      {label:'Клиент: да, запишите', next:'close'},
+    ]
+  },
+
+  obj_price:{
+    title:'Возражение: дорого',
+    sub:'Работаем с ценой',
+    msgs:[
+      {type:'in', text:'Дороговато...'},
+      {type:'out', text:'Понимаю Вас 🙏\n\nСмотрите на это иначе — это не трата, а инвестиция в возможности.\nКазахский открывает двери — на работе, в карьере, в общении с близкими.\n\nПлюс у нас рассрочка без переплаты — 15 750 ₸ в месяц через Kaspi, Halyk или Home Credit. Срок до 12 месяцев.\n\nЕсли сравнивать с репетитором — у нас выходит в несколько раз дешевле, при этом есть система, куратор и гарантия результата.\n\nРассчитать по рассрочке?'},
+    ],
+    choices:[
+      {label:'Клиент: давайте по рассрочке', next:'close'},
+      {label:'Клиент: всё равно подумаю', next:'obj_think'},
+    ]
+  },
+
+  obj_time:{
+    title:'Возражение: нет времени',
+    sub:'Снимаем страх нехватки времени',
+    msgs:[
+      {type:'in', text:'Не знаю, найду ли время...'},
+      {type:'out', text:'Курс как раз создан для занятых людей 😊\n\nВсего 20–30 минут в день — меньше, чем обеденный перерыв.\nМногие ученики занимаются утром за кофе или вечером перед сном.\n\nГибкий график — сами выбираете время под себя.\nЕсли нужно — можно заморозить обучение до 3 недель.\n\nЭто реально мало. Попробуем?'},
+    ],
+    choices:[
+      {label:'Клиент: убедили', next:'offer'},
+      {label:'Клиент: всё равно сомневается', next:'obj_think'},
+    ]
+  },
+
+  obj_think:{
+    title:'Возражение: подумаю',
+    sub:'Выясняем что именно останавливает',
+    msgs:[
+      {type:'in', text:'Надо подумать...'},
+      {type:'out', text:'Конечно, не тороплю 🙌\n\nСкажите — что именно хотите обдумать?\nМожет, остался вопрос который я не раскрыл? С удовольствием отвечу — это не займёт много времени.'},
+    ],
+    choices:[
+      {label:'Клиент: вопрос по цене', next:'obj_price'},
+      {label:'Клиент: вопрос по времени', next:'obj_time'},
+      {label:'Клиент: пробовал раньше — не вышло', next:'obj_tried'},
+      {label:'Клиент: просто нужно время', next:'followup'},
+    ]
+  },
+
+  obj_tried:{
+    title:'Возражение: пробовал — не вышло',
+    sub:'Переключаем с прошлого опыта',
+    msgs:[
+      {type:'in', text:'Я пробовал учить казахский — не пошло'},
+      {type:'out', text:'Понимаю, это очень частая история 🙏\n\nОбычно не идёт из-за подхода: зубришь правила, нет живой практики, скучно — и бросаешь.\n\nУ нас всё иначе — с первого урока говорите, никакой грамматики в вакууме.\nИменно поэтому к нам приходят те, кто уже пробовал и у кого не получилось.\n\nДавайте запишу Вас на пробный урок — сами почувствуете разницу?'},
+    ],
+    choices:[
+      {label:'Клиент: ок, на пробный', next:'close_trial'},
+      {label:'Клиент: всё ещё думает', next:'followup'},
+    ]
+  },
+
+  followup:{
+    title:'Дожим',
+    sub:'Клиент не отвечает / отложил решение',
+    msgs:[
+      {type:'sys', text:'День 1 — мягкое напоминание'},
+      {type:'out', text:'[Имя], добрый день! 👋\nВы смотрели презентацию — как впечатление?\nЕсли остались вопросы — я здесь 🙌'},
+      {type:'sys', text:'День 3 — если нет ответа'},
+      {type:'out', text:'[Имя], добрый день!\nМы набираем группу — старт [дата], места ограничены.\nЕсли решитесь — лучше оформить сейчас, чтобы точно попасть на поток 🙏'},
+      {type:'voice', text:'[Имя], добрый день! Ибрахим из Shanyraq. Вы смотрели программу — как Вам? Если остались вопросы — давайте разберём. Буду рад ответить.'},
+      {type:'sys', text:'День 7 — финальное сообщение'},
+      {type:'out', text:'[Имя], не хочу беспокоить лишний раз 😊\nЕсли сейчас не актуально — скажите, и я занесу Вас в список на следующий поток. Напомню, когда будем набирать.'},
+    ],
+    choices:[
+      {label:'Клиент написал — к закрытию', next:'close'},
+      {label:'Клиент: дорого', next:'obj_price'},
+    ]
+  },
+
+};
+
+let currentStage = 'open';
+let history = [];
+
+function buildWaveBars(){
+  return [6,10,14,8,16,10,12,16,8,6,14,10].map(h=>`<div class="wave-bar" style="height:${h}px"></div>`).join('');
 }
 
-// Auto-highlight nav on scroll
-const sections = document.querySelectorAll('.section');
-const navItems = document.querySelectorAll('.nav-item');
+function renderFlow(id){
+  const flow = flows[id];
+  if(!flow) return;
+  document.getElementById('pageTitle').textContent = flow.title;
+  document.getElementById('pageSub').textContent = flow.sub;
 
-window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(s => {
-    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  const chat = document.getElementById('chatMessages');
+  const choicesWrap = document.getElementById('choicesWrap');
+  let html = '';
+  let vi = 0;
+
+  (flow.msgs||[]).forEach(m=>{
+    if(m.type==='voice'){
+      const idx = vi++;
+      html+=`<div class="msg out">
+        <div class="who">менеджер — голосовое</div>
+        <div class="voice-msg" onclick="toggleVoice(${idx})">
+          <div class="voice-icon"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.86-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.07-3.06 7.44-7 7.93V20h3v2H9v-2h3v-3.07z"/></svg></div>
+          <div class="voice-wave">${buildWaveBars()}</div>
+          <div class="voice-label">голосовое ▶</div>
+        </div>
+        <div class="voice-text-reveal" id="vtr_${idx}">${m.text}</div>
+      </div>`;
+    } else if(m.type==='handoff'){
+      html+=`<div class="msg sys">
+        <div class="manager-end">
+          <div class="icon">🤝</div>
+          <div class="title">Передаём менеджеру</div>
+          <div class="desc">Дальше куратор ведёт клиента индивидуально.<br>Структуру разговора менеджер знает — используй её как основу.</div>
+        </div>
+      </div>`;
+    } else {
+      const who = m.type==='out'?'менеджер':m.type==='in'?'клиент':'';
+      html+=`<div class="msg ${m.type}">
+        ${who?`<div class="who">${who}</div>`:''}
+        <div class="bubble">${m.text.replace(/\n/g,'<br>')}</div>
+      </div>`;
+    }
   });
-  navItems.forEach(n => {
-    n.classList.remove('active');
-    if (n.getAttribute('onclick')?.includes(current)) n.classList.add('active');
-  });
-});
+
+  chat.innerHTML = html;
+
+  let chHtml = '';
+  if(flow.choices && flow.choices.length){
+    chHtml+=`<div class="choices-label">Что отвечает клиент — выбери:</div><div class="choices">`;
+    flow.choices.forEach(c=>{
+      chHtml+=`<button class="choice-btn" onclick="navigate('${c.next}')">${c.label} →</button>`;
+    });
+    chHtml+='</div>';
+  } else if(!flow.msgs.find(m=>m.type==='handoff')){
+    chHtml='<div style="font-size:12px;color:#b0adb8;padding:4px 0">Конец ветки — используй боковое меню для перехода к другому этапу</div>';
+  } else {
+    chHtml='<div style="font-size:12px;color:#b0adb8;padding:4px 0">Дальнейшее ведение — на усмотрение менеджера</div>';
+  }
+  choicesWrap.innerHTML = chHtml;
+  document.getElementById('backBtn').style.display = history.length>0?'block':'none';
+}
+
+function toggleVoice(idx){
+  const el = document.getElementById('vtr_'+idx);
+  if(el) el.style.display = el.style.display==='block'?'none':'block';
+}
+
+function navigate(id){
+  history.push(currentStage);
+  currentStage = id;
+  syncNav(id);
+  renderFlow(id);
+}
+
+function goBack(){
+  if(history.length>0){
+    currentStage = history.pop();
+    syncNav(currentStage);
+    renderFlow(currentStage);
+  }
+}
+
+function goStage(id, el){
+  history=[];
+  currentStage=id;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderFlow(id);
+}
+
+function syncNav(id){
+  // no-op for click-through navigation — sidebar highlights on direct clicks only
+}
+
+renderFlow('open');
 </script>
 </body>
 </html>
